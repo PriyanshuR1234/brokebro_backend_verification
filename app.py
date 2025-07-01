@@ -154,6 +154,26 @@ def process_image_with_gemini(image_data):
             "confidence_score": 0
         }
 
+@app.route('/', methods=['GET'])
+def home():
+    """Serve the frontend HTML page"""
+    from flask import send_file
+    return send_file('index.html')
+
+@app.route('/api', methods=['GET'])
+def api_info():
+    """API information endpoint"""
+    return jsonify({
+        "message": "Student ID Verification API",
+        "version": "1.0.0",
+        "endpoints": {
+            "/health": "GET - Health check",
+            "/verify-student-id": "POST - Verify student ID via file upload",
+            "/verify-base64": "POST - Verify student ID via base64 image"
+        },
+        "status": "running"
+    })
+
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
