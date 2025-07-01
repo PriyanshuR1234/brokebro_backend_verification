@@ -1,69 +1,44 @@
-import requests
+from flask import Flask, request, jsonify
 import base64
-import json
 import os
 
-class StudentIDVerifier:
-    def __init__(self, base_url="http://127.0.0.1:5000/"):
-        self.base_url = base_url
-    
-    def health_check(self):
-        """Check if the API is running and healthy"""
-        try:
-            response = requests.get(f"{self.base_url}/health")
-            return response.json()
-        except Exception as e:
-            return {"error": str(e)}
-    
-    def verify_image_file(self, image_path):
-        """Verify student ID using file upload"""
-        try:
-            with open(image_path, 'rb') as f:
-                files = {'image': f}
-                response = requests.post(f"{self.base_url}/verify-student-id", files=files)
-                return response.json()
-        except Exception as e:
-            return {"error": str(e)}
-    
-    def verify_base64_image(self, image_path):
-        """Verify student ID using base64 encoded image"""
-        try:
-            with open(image_path, 'rb') as f:
-                image_data = base64.b64encode(f.read()).decode('utf-8')
-            
-            data = {"image": image_data}
-            response = requests.post(
-                f"{self.base_url}/verify-base64",
-                json=data,
-                headers={'Content-Type': 'application/json'}
-            )
-            return response.json()
-        except Exception as e:
-            return {"error": str(e)}
+app = Flask(__name__)
 
-def main():
-    verifier = StudentIDVerifier()
-    
-    # Test health check
-    print("Testing health check...")
-    health = verifier.health_check()
-    print(json.dumps(health, indent=2))
-    print("\n" + "="*50 + "\n")
-    
-    # Test with an image file (you'll need to provide an actual image path)
-    image_path = input("Enter path to student ID image (or press Enter to skip): ").strip()
-    
-    if image_path and os.path.exists(image_path):
-        print("Testing file upload verification...")
-        result = verifier.verify_image_file(image_path)
-        print(json.dumps(result, indent=2))
-        print("\n" + "="*50 + "\n")
-        
-        print("Testing base64 verification...")
-        result = verifier.verify_base64_image(image_path)
-        print(json.dumps(result, indent=2))
-    else:
-        print("No valid image path provided. Skipping image verification tests.")
+# Health check endpoint
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({"status": "ok", "message": "API is running!"})
 
-if __name__ == "__main__":
-    main()
+# Verify student ID via image upload
+@app.route('/verify-student-id', methods=['POST'])
+def verify_student_id():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image file provided"}), 400
+
+    image = request.files['image']
+    if image.filename == '':
+        return jsonify({"error": "Empty filename"}), 400
+
+    # Simulate verification (add your own logic here)
+    return jsonify({
+        "status": "verified",
+        "filename": image.filename
+    })
+
+# Verify student ID via base64 encoded image
+@app.route('/verify-base64', methods=['POST'])
+def verify_base64():
+    data = request.get_json()
+    if 'image' not in data:
+        return jsonify({"error": "No image data provided"}), 400
+
+    try:
+        image_bytes = base64.b64decode(data['image'])
+        # Simulate verification (add your own logic here)
+        return jsonify({"status": "verified", "size": len(image_bytes)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+if __name__ == '__main__':
+    # Replit requires host=0.0.0.0 and port=3000
+    app.run(host='0.0.0.0', port=3000)
