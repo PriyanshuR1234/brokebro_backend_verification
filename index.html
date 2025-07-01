@@ -375,7 +375,7 @@
             formData.append('image', selectedFile);
             
             try {
-                const response = await fetch('http://localhost:5000/verify-student-id', {
+                const response = await fetch('/verify-student-id', {
                     method: 'POST',
                     body: formData
                 });
